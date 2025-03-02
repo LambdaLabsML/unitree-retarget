@@ -1,5 +1,6 @@
 # unitree-retarget
 
+Retarget [mocap data](https://huggingface.co/datasets/unitreerobotics/LAFAN1_Retargeting_Dataset) to Unitree G1
 
 ## Installation
 
@@ -38,7 +39,11 @@ __Step 3__: Sanity Check
 
 `python run_check.py`
 
+![Demo](img/sanity.gif)
+
 
 __Step 4__: Retarget Demo
 
 `python run_retarget.py --mocap_file ./data/g1/dance2_subject1.csv`
+
+![Demo](img/dance.gif)
