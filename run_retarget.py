@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import argparse
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_msg_dds__LowState_
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_
@@ -110,9 +111,28 @@ class MocapRetarget:
         print("Motion playback finished.")
 
 if __name__ == "__main__":
-    # Specify the mocap CSV file (should be in the current directory)
-    csv_file = "./data/g1/dance2_subject1_s200.csv" # good
-    retarget = MocapRetarget(csv_file)
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description='Run mocap retargeting on G1 robot')
+    parser.add_argument('--csv_file', type=str, required=True,
+                      help='Path to the mocap CSV file')
+    parser.add_argument('--fps', type=float, default=30.0,
+                      help='Playback frames per second (default: 30.0)')
+    parser.add_argument('--scale', type=float, default=0.5,
+                      help='Scaling factor for joint angles (default: 0.5)')
+    parser.add_argument('--mocap_skip', type=int, default=7,
+                      help='Number of initial columns to skip in CSV (default: 7)')
+    parser.add_argument('--offset', type=int, default=0,
+                      help='Starting joint index offset (default: 0)')
+
+    args = parser.parse_args()
+
+    # Initialize and run the retargeting
+    retarget = MocapRetarget(args.csv_file)
+    retarget.fps = args.fps
+    retarget.scale = args.scale
+    retarget.mocap_skip = args.mocap_skip
+    retarget.offset = args.offset
+    
     retarget.init_communication()
     retarget.send_first_frame()
     retarget.run()
