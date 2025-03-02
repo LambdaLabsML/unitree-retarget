@@ -13,7 +13,7 @@ cd unitree_sdk2_python
 pip3 install -e .
 cd -
 
-git clone https://github.com/chuanli11/unitree-retarget.git
+git clone https://github.com/LambdaLabsML/unitree-retarget.git
 cd unitree-retarget
 ```
 
@@ -41,4 +41,4 @@ __Step 3__: Sanity Check
 
 __Step 4__: Retarget Demo
 
-`pythno run_retarget.py`
+`python run_retarget.py --mocap_file ./data/g1/dance2_subject1.csv`

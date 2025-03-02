@@ -27,11 +27,11 @@ Kd = [
 ]
 
 class MocapRetarget:
-    def __init__(self, csv_file):
-        # Load CSV data. Each row has 36 values:
+    def __init__(self, mocap_file):
+        # Load mocap CSV data. Each row has 36 values:
         # - First 7: base pose (position + quaternion) [ignored for low-level joint control]
         # - Last 29: joint angles (in radians)
-        self.data = np.loadtxt(csv_file, delimiter=',')
+        self.data = np.loadtxt(mocap_file, delimiter=',')
         self.num_frames = self.data.shape[0]
         self.fps = 30.0
         self.scale = 0.5
@@ -138,23 +138,23 @@ class MocapRetarget:
 if __name__ == "__main__":
     # Set up argument parser
     parser = argparse.ArgumentParser(description='Run mocap retargeting on G1 robot with warmup transition')
-    parser.add_argument('--csv_file', type=str, required=True,
-                      help='Path to the mocap CSV file')
+    parser.add_argument('--mocap_file', type=str, required=True,
+                      help='Path to the mocap CSV file. Currenlty support unitreerobotics/LAFAN1_Retargeting_Dataset')
     parser.add_argument('--fps', type=float, default=30.0,
                       help='Playback frames per second (default: 30.0)')
     parser.add_argument('--scale', type=float, default=0.5,
                       help='Scaling factor for joint angles (default: 0.5)')
     parser.add_argument('--mocap_skip', type=int, default=7,
-                      help='Number of initial columns to skip in CSV (default: 7)')
+                      help='Number of initial columns to skip in CSV (default: 7 for data from unitreerobotics/LAFAN1_Retargeting_Dataset)')
     parser.add_argument('--warmup_time', type=float, default=2.0,
                       help='Warmup time (in seconds) to interpolate to initial pose (default: 2.0)')
     parser.add_argument('--offset', type=int, default=0,
-                      help='Starting joint index offset (default: 0)')
+                      help='Starting joint index offset (default: 0 for full body). Change it to 15 for upper body (left & right arms) only.')
     
     args = parser.parse_args()
 
     # Initialize and run the retargeting
-    retarget = MocapRetarget(args.csv_file)
+    retarget = MocapRetarget(args.mocap_file)
     retarget.fps = args.fps
     retarget.scale = args.scale
     retarget.mocap_skip = args.mocap_skip
