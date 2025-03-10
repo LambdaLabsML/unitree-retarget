@@ -11,12 +11,19 @@ from unitree_sdk2py.comm.motion_switcher.motion_switcher_client import MotionSwi
 G1_NUM_MOTOR = 29
 
 # PD gains for the 29 joints (using the same gains as in g1_low_level_example.py)
+# Kp = [
+#     60, 60, 60, 100, 40, 40,   # left leg
+#     60, 60, 60, 100, 40, 40,   # right leg
+#     60, 40, 40,               # waist
+#     40, 40, 40, 40, 40, 40, 40, # left arm
+#     40, 40, 40, 40, 40, 40, 40  # right arm
+# ]
 Kp = [
-    60, 60, 60, 100, 40, 40,   # left leg
-    60, 60, 60, 100, 40, 40,   # right leg
-    60, 40, 40,               # waist
-    40, 40, 40, 40, 40, 40, 40, # left arm
-    40, 40, 40, 40, 40, 40, 40  # right arm
+    30, 30, 30, 50, 20, 20,   # left leg
+    30, 30, 30, 50, 20, 20,   # right leg
+    30, 20, 20,               # waist
+    20, 20, 20, 20, 20, 20, 20, # left arm
+    20, 20, 20, 20, 20, 20, 20  # right arm
 ]
 Kd = [
     1, 1, 1, 2, 1, 1,         # left leg
@@ -34,7 +41,10 @@ class MocapRetarget:
         self.data = np.loadtxt(mocap_file, delimiter=',')
         self.num_frames = self.data.shape[0]
         self.fps = 30.0
-        self.scale = 0.5
+        self.scale = 1.0
+        self.scale_leg = 0.0    # New scaling factor for legs (motors 0-11)
+        self.scale_waist = 0.0  # New scaling factor for waist (motors 12-14)
+        self.scale_arm = 0.0    # New scaling factor for arms (motors 15-28)
         self.mocap_skip = 7
         self.control_dt = 1.0 / self.fps 
         self.low_cmd = unitree_hg_msg_dds__LowCmd_()  # default constructor as in original example
@@ -97,7 +107,7 @@ class MocapRetarget:
                 current_pose[i] = self.low_state.motor_state[i].q
 
         # Get the target pose from the first mocap frame (scale applied)
-        target_pose = self.data[0, self.mocap_skip:] * self.scale
+        target_pose = self.data[0, self.mocap_skip:] * self.scale    
 
         print(f"Warmup transition over {num_warmup_frames} frames...")
         next_time = time.time()
@@ -126,6 +136,14 @@ class MocapRetarget:
             next_time += self.control_dt
             # Extract joint angles from mocap data and apply scaling.
             joint_angles = self.data[frame_idx, self.mocap_skip:] * self.scale
+
+            # Apply leg scaling (motors 0-11)
+            joint_angles[0:12] *= (self.scale_leg)
+            # Apply waist scaling (motors 12-14)
+            joint_angles[12:15] *= (self.scale_waist)
+            # Apply arm scaling (motors 15:29)
+            joint_angles[15:29] *= (self.scale_arm)
+
             for i in range(G1_NUM_MOTOR):
                 self.low_cmd.motor_cmd[i].q = float(joint_angles[i])
             self.send_motor_cmd()
@@ -144,6 +162,12 @@ if __name__ == "__main__":
                       help='Playback frames per second (default: 30.0)')
     parser.add_argument('--scale', type=float, default=0.5,
                       help='Scaling factor for joint angles (default: 0.5)')
+    parser.add_argument('--scale_leg', type=float, default=0.5,
+                      help='Additional scaling factor for leg joints (motors 0-11) (default: 0.0)')
+    parser.add_argument('--scale_waist', type=float, default=0.5,
+                      help='Additional scaling factor for waist joints (motors 12-14) (default: 0.0)')
+    parser.add_argument('--scale_arm', type=float, default=1.0,
+                      help='Additional scaling factor for arm joints (motors 15-28) (default: 0.0)')
     parser.add_argument('--mocap_skip', type=int, default=7,
                       help='Number of initial columns to skip in CSV (default: 7 for data from unitreerobotics/LAFAN1_Retargeting_Dataset)')
     parser.add_argument('--warmup_time', type=float, default=2.0,
@@ -157,6 +181,9 @@ if __name__ == "__main__":
     retarget = MocapRetarget(args.mocap_file)
     retarget.fps = args.fps
     retarget.scale = args.scale
+    retarget.scale_leg = args.scale_leg
+    retarget.scale_waist = args.scale_waist
+    retarget.scale_arm = args.scale_arm
     retarget.mocap_skip = args.mocap_skip
     retarget.warmup_time = args.warmup_time
 
