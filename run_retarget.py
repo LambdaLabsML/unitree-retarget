@@ -22,8 +22,8 @@ Kp = [
     30, 30, 30, 50, 20, 20,   # left leg
     30, 30, 30, 50, 20, 20,   # right leg
     30, 20, 20,               # waist
-    20, 20, 20, 20, 20, 20, 20, # left arm
-    20, 20, 20, 20, 20, 20, 20  # right arm
+    10, 10, 10, 10, 10, 10, 10, # left arm
+    10, 10, 10, 10, 10, 10, 10  # right arm
 ]
 Kd = [
     1, 1, 1, 2, 1, 1,         # left leg
@@ -34,12 +34,16 @@ Kd = [
 ]
 
 class MocapRetarget:
-    def __init__(self, mocap_file):
+    def __init__(self, mocap_file, num_frames):
         # Load mocap CSV data. Each row has 36 values:
         # - First 7: base pose (position + quaternion) [ignored for low-level joint control]
         # - Last 29: joint angles (in radians)
         self.data = np.loadtxt(mocap_file, delimiter=',')
-        self.num_frames = self.data.shape[0]
+        # self.num_frames = self.data.shape[0]
+        if num_frames == 0:
+            self.num_frames = self.data.shape[0]
+        else:
+            self.num_frames = num_frames
         self.fps = 30.0
         self.scale = 1.0
         self.scale_leg = 0.0    # New scaling factor for legs (motors 0-11)
@@ -174,11 +178,13 @@ if __name__ == "__main__":
                       help='Warmup time (in seconds) to interpolate to initial pose (default: 2.0)')
     parser.add_argument('--offset', type=int, default=0,
                       help='Starting joint index offset (default: 0 for full body). Change it to 15 for upper body (left & right arms) only.')
-    
+    parser.add_argument('--num_frames', type=int, default=0,
+                      help='num of frames for replay')
+        
     args = parser.parse_args()
 
     # Initialize and run the retargeting
-    retarget = MocapRetarget(args.mocap_file)
+    retarget = MocapRetarget(args.mocap_file, args.num_frames)
     retarget.fps = args.fps
     retarget.scale = args.scale
     retarget.scale_leg = args.scale_leg
