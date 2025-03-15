@@ -196,5 +196,43 @@ if __name__ == "__main__":
     retarget.init_communication()
     # Execute the warmup transition to smoothly move to the initial mocap pose.
     retarget.warmup_transition()
+
+
+    # Play audio file via SSH
+    import subprocess
+    import atexit
+    import signal
+
+    # First, kill any existing audio processes
+    cleanup_cmd = ['ssh', 'unitree@192.168.123.164', 'pkill -f "aplay.*robot-dance"']
+    try:
+        subprocess.run(['sshpass', '-p', '123'] + cleanup_cmd)
+    except Exception as e:
+        print(f"Warning: Could not cleanup existing audio processes: {e}")
+
+    # Start the new audio loop
+    ssh_command = ['ssh', 'unitree@192.168.123.164', 'while true; do aplay /home/unitree/robot-dance.wav; done']
+    audio_process = None
+    try:
+        audio_process = subprocess.Popen(['sshpass', '-p', '123'] + ssh_command)
+        
+        # Register cleanup function to be called on program exit
+        def cleanup():
+            if audio_process:
+                # Kill the SSH process
+                audio_process.terminate()
+                audio_process.wait()
+                # Kill any remaining aplay processes on the remote machine
+                try:
+                    subprocess.run(['sshpass', '-p', '123'] + cleanup_cmd)
+                except:
+                    pass
+        
+        atexit.register(cleanup)
+        signal.signal(signal.SIGINT, lambda sig, frame: exit(0))  # Handle Ctrl+C
+        
+    except Exception as e:
+        print(f"Warning: Could not play audio file: {e}")
+
     # Run the main playback loop.
     retarget.run()
