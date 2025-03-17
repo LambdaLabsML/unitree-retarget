@@ -11,12 +11,12 @@ virtualenv -p /usr/bin/python venv-unitree
 
 git clone https://github.com/unitreerobotics/unitree_sdk2_python.git
 cd unitree_sdk2_python
+git checkout 4eadcf6ba0cc822501ff2f1766be637c0fb7f229
 pip3 install -e .
 cd -
 
 git clone https://github.com/LambdaLabsML/unitree-retarget.git
 cd unitree-retarget
-git checkout 4eadcf6ba0cc822501ff2f1766be637c0fb7f229
 ```
 
 ## Usage
