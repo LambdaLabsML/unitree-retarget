@@ -1,6 +1,10 @@
 import time
 import numpy as np
 import argparse
+import subprocess
+import atexit
+import signal
+
 from unitree_sdk2py.core.channel import ChannelPublisher, ChannelSubscriber, ChannelFactoryInitialize
 from unitree_sdk2py.idl.default import unitree_hg_msg_dds__LowCmd_, unitree_hg_msg_dds__LowState_
 from unitree_sdk2py.idl.unitree_hg.msg.dds_ import LowCmd_, LowState_
@@ -180,7 +184,8 @@ if __name__ == "__main__":
                       help='Starting joint index offset (default: 0 for full body). Change it to 15 for upper body (left & right arms) only.')
     parser.add_argument('--num_frames', type=int, default=0,
                       help='num of frames for replay')
-        
+    parser.add_argument('--music_file', type=str, default="",
+                      help='Music file to play during motion (default: empty string)')
     args = parser.parse_args()
 
     # Initialize and run the retargeting
@@ -197,42 +202,38 @@ if __name__ == "__main__":
     # Execute the warmup transition to smoothly move to the initial mocap pose.
     retarget.warmup_transition()
 
+    # play music 
+    if args.music_file:
+        # First, kill any existing audio processes
+        cleanup_cmd = ['ssh', 'unitree@192.168.123.164', 'pkill -f "aplay.*"']
+        try:
+            subprocess.run(['sshpass', '-p', '123'] + cleanup_cmd)
+        except Exception as e:
+            print(f"Warning: Could not cleanup existing audio processes: {e}")
 
-    # Play audio file via SSH
-    import subprocess
-    import atexit
-    import signal
-
-    # First, kill any existing audio processes
-    cleanup_cmd = ['ssh', 'unitree@192.168.123.164', 'pkill -f "aplay.*robot-dance"']
-    try:
-        subprocess.run(['sshpass', '-p', '123'] + cleanup_cmd)
-    except Exception as e:
-        print(f"Warning: Could not cleanup existing audio processes: {e}")
-
-    # Start the new audio loop
-    ssh_command = ['ssh', 'unitree@192.168.123.164', 'while true; do aplay /home/unitree/robot-dance.wav; done']
-    audio_process = None
-    try:
-        audio_process = subprocess.Popen(['sshpass', '-p', '123'] + ssh_command)
-        
-        # Register cleanup function to be called on program exit
-        def cleanup():
-            if audio_process:
-                # Kill the SSH process
-                audio_process.terminate()
-                audio_process.wait()
-                # Kill any remaining aplay processes on the remote machine
-                try:
-                    subprocess.run(['sshpass', '-p', '123'] + cleanup_cmd)
-                except:
-                    pass
-        
-        atexit.register(cleanup)
-        signal.signal(signal.SIGINT, lambda sig, frame: exit(0))  # Handle Ctrl+C
-        
-    except Exception as e:
-        print(f"Warning: Could not play audio file: {e}")
+        # Start the new audio loop
+        ssh_command = ['ssh', 'unitree@192.168.123.164', 'while true; do aplay /home/unitree/'+ args.music_file + '; done']
+        audio_process = None
+        try:
+            audio_process = subprocess.Popen(['sshpass', '-p', '123'] + ssh_command)
+            
+            # Register cleanup function to be called on program exit
+            def cleanup():
+                if audio_process:
+                    # Kill the SSH process
+                    audio_process.terminate()
+                    audio_process.wait()
+                    # Kill any remaining aplay processes on the remote machine
+                    try:
+                        subprocess.run(['sshpass', '-p', '123'] + cleanup_cmd)
+                    except:
+                        pass
+            
+            atexit.register(cleanup)
+            signal.signal(signal.SIGINT, lambda sig, frame: exit(0))  # Handle Ctrl+C
+            
+        except Exception as e:
+            print(f"Warning: Could not play audio file: {e}")
 
     # Run the main playback loop.
     retarget.run()

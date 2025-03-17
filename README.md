@@ -42,8 +42,30 @@ __Step 3__: Sanity Check
 ![Demo](img/sanity.gif)
 
 
-__Step 4__: Retarget Demo
+__Step 4__: Retarget
 
-`python run_retarget.py --mocap_file ./data/g1/dance2_subject1.csv`
+`python run_retarget.py --mocap_file ./data/g1/dance1_subject2_rev.csv`
 
 ![Demo](img/dance.gif)
+
+
+You can use the following arguments to tune the magnitude of the motion (globally and group-wise):
+* `--scale`: global motion scaler. Default `0.5`
+* `--scale_arm`: arms, compound onto `--scale`. Default `1.0`.
+* `--scale_leg`: legs, compound onto `--scale`. Default `0.5`.
+* `--scale_waist`: waist, compund onto `--scale`. Default `0.5`.
+
+Play music: make sure you upload the music file (e.g. `./music/robot_merge2.wav`) to G1 under `/home/unitree`. 
+
+`python run_retarget.py --mocap_file ./data/g1/dance1_subject2_rev.csv --music_file robot_merge2.wav --scale_arm 1.25`
+
+
+__Demo__
+
+```
+# Run the above demo
+./demo.sh dance
+
+# Kill the music if needed
+./demo.sh kill
+```
