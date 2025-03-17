@@ -16,6 +16,7 @@ cd -
 
 git clone https://github.com/LambdaLabsML/unitree-retarget.git
 cd unitree-retarget
+git checkout 4eadcf6ba0cc822501ff2f1766be637c0fb7f229
 ```
 
 ## Usage
