@@ -55,9 +55,14 @@ You can use the following arguments to tune the magnitude of the motion (globall
 * `--scale_leg`: legs, compound onto `--scale`. Default `0.5`.
 * `--scale_waist`: waist, compund onto `--scale`. Default `0.5`.
 
-Play music: make sure you upload the music file (e.g. `./music/robot_merge2.wav`) to G1 under `/home/unitree`. 
+Play music
+* Upload the music file (e.g. `./music/robot_merge2.wav`) to G1 under `/home/unitree`. 
+* Connect the G1 with a speaker (e.g. via the type-c port at its neck).
+* Set the default audio output device (sink) to the speaker. You can use `pactl list short sinks` to list the devices, and use `pactl set-default-sink speaker-id` to select the device.
+* (Optionally) Run `alsamixer` in the G1 terminal and adjust the volume. After Alsamixer is launched, press F6 to select the output device and use key board to increase/decrease the volume.
 
 `python run_retarget.py --mocap_file ./data/g1/dance1_subject2_rev.csv --music_file robot_merge2.wav --scale_arm 1.25`
+
 
 
 __Demo__
